@@ -1,147 +1,145 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Shield, User, Smartphone, Lock, CreditCard, ArrowRight } from "lucide-react";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { Button } from "@/components/ui/Button";
+import Link from "next/link";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    fullName: "",
-    phone: "",
-    citizenshipNo: "",
+    name: "",
+    email: "",
     password: "",
+    phone: "",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
+    setSuccess("");
 
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "केही त्रुटि भयो। पुनः प्रयास गर्नुहोस्।");
+      }
+
+      setSuccess("खाता सफलतापूर्वक सिर्जना भयो! लगइन गर्दैछ...");
+      
+      // २ सेकेन्डपछि Sign-in पेजमा पठाउने
+      setTimeout(() => {
+        router.push("/auth/signin");
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
       setLoading(false);
-      router.push("/dashboard");
-    }, 1200);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
-
-      <main className="w-full max-w-md relative z-10">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-blue-600 flex items-center justify-center shadow-lg">
-              <Shield className="w-7 h-7 text-white" />
-            </div>
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Create Citizen Profile</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Register to access Digital Citizen Services & NIN Integration
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4">
+      <div className="max-w-md w-full space-y-6 p-8 bg-slate-800 rounded-xl shadow-2xl border border-slate-700">
+        <div className="text-center">
+          <h2 className="text-3xl font-extrabold text-white">SmartNepal</h2>
+          <p className="mt-2 text-sm text-slate-400">नयाँ नागरिक खाता सिर्जना गर्नुहोस्</p>
         </div>
 
-        <GlassCard className="p-6 sm:p-8">
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                Full Name (पूरा नाम)
-              </label>
-              <div className="relative">
-                <User className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  required
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  placeholder="e.g. Madhav Gautam"
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                Mobile Number
-              </label>
-              <div className="relative">
-                <Smartphone className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-                <input
-                  type="tel"
-                  required
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="98XXXXXXXX"
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                Citizenship No. / NIN (नागरिकता नं.)
-              </label>
-              <div className="relative">
-                <CreditCard className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  required
-                  value={formData.citizenshipNo}
-                  onChange={(e) => setFormData({ ...formData, citizenshipNo: e.target.value })}
-                  placeholder="27-01-79-XXXXX"
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-                Create Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-                <input
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="••••••••"
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            <Button type="submit" variant="primary" className="w-full justify-center py-3 mt-2" disabled={loading}>
-              {loading ? (
-                <span>Creating Account...</span>
-              ) : (
-                <>
-                  <span>Register Citizen Account</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-white/10 text-center">
-            <p className="text-xs text-slate-400">
-              Already registered?{" "}
-              <Link href="/login" className="text-blue-400 hover:underline font-medium">
-                Sign In
-              </Link>
-            </p>
+        {error && (
+          <div className="bg-red-500/10 border border-red-500 text-red-400 p-3 rounded-lg text-sm">
+            {error}
           </div>
-        </GlassCard>
+        )}
 
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-xs text-slate-400 hover:text-white transition-colors">
-            ← Back to Smart Nepal Home
+        {success && (
+          <div className="bg-green-500/10 border border-green-500 text-green-400 p-3 rounded-lg text-sm">
+            {success}
+          </div>
+        )}
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label className="block text-sm font-medium text-slate-300">पुरा नाम *</label>
+            <input
+              type="text"
+              name="name"
+              required
+              value={formData.name}
+              onChange={handleChange}
+              className="mt-1 w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="राम बहादुर श्रेष्ठ"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300">ईमेल ठेगाना *</label>
+            <input
+              type="email"
+              name="email"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              className="mt-1 w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="example@gmail.com"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300">मोबाइल नम्बर</label>
+            <input
+              type="text"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className="mt-1 w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="98XXXXXXXX"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300">पासवर्ड *</label>
+            <input
+              type="password"
+              name="password"
+              required
+              value={formData.password}
+              onChange={handleChange}
+              className="mt-1 w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition duration-200 disabled:opacity-50"
+          >
+            {loading ? "खाता बन्दैछ..." : "दर्ता गर्नुहोस् (Sign Up)"}
+          </button>
+        </form>
+
+        <p className="text-center text-sm text-slate-400">
+          पहिले नै खाता छ?{" "}
+          <Link href="/auth/signin" className="text-blue-400 hover:underline">
+            लगइन गर्नुहोस्
           </Link>
-        </div>
-      </main>
+        </p>
+      </div>
     </div>
   );
 }
